@@ -1,0 +1,2 @@
+This file will be searched for occurrences of words. To this end, some words must occur more than once.
+
