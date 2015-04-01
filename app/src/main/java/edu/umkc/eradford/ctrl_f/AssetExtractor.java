@@ -13,7 +13,7 @@ import java.io.IOException;
  */
 public class AssetExtractor {
 
-    Context context;
+    private Context context;
 
     AssetExtractor(Context context) {
         this.context = context;
@@ -28,29 +28,44 @@ public class AssetExtractor {
     }
 
     public void extractAssets(AssetManager assets, String path) {
+        Log.v("AssetExtractor","Extracting assets at \""+path+"\"");
+        String assetList[];
         try {
-            String[] assetList = assets.list(path);
-            if (assetList == null)
-                return;
-            for (String asset:assetList) {
-                if (new File(asset).isDirectory())
-                    extractAssets(assets,path+asset);
-                else
-                    extractAsset(assets,asset);
+            assetList = assets.list(path);
+            if (assetList == null || assetList.length==0) {
+                extractAsset(assets, path);
+            } else {
+                for (String asset:assetList) {
+                    switch (asset) {
+                        case "images":
+                        case "sounds":
+                        case "webkit":
+                        case "webkitsec":
+                            continue;
+                    }
+                    (new File(context.getFilesDir(),path)).mkdir();
+                    Log.v("AssetExtractor","Encountered asset: "+path+"/"+asset);
+                    if (path.equals("")) {
+                        extractAssets(assets, asset);
+                    } else {
+                        extractAssets(assets, path + "/" + asset);
+                    }
+                }
             }
-        } catch (IOException ioe) {
-            Log.d("ExtractAssets", ioe.getLocalizedMessage());
+        } catch (IOException e) {
+            Log.v("AssetExtractor","I/O Error: "+e.getLocalizedMessage());
         }
     }
 
     private void extractAsset(AssetManager assets, String path) throws IOException {
-        Log.v("ExtractAsset",path);
-        StreamUtility.copyStream(assets.open(path),openOutputStream(path));
+        Log.v("AssetExtractor","Copying asset at : "+path);
+        StreamUtility.copyStream(assets.open(path), openOutputStream(path));
     }
 
     private FileOutputStream openOutputStream(String path) throws IOException{
         File outputFile = new File(context.getFilesDir(),path);
         outputFile.createNewFile();
+        Log.v("AssetExtractor","Opening stream: "+outputFile);
         return new FileOutputStream(outputFile);
     }
 }
