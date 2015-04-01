@@ -12,32 +12,72 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.ListView;
 
 import com.googlecode.tesseract.android.TessBaseAPI;
 
+import junit.framework.Assert;
+
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 
 public class MainActivity extends ActionBarActivity {
 
     public static final int IMAGE_CAPTURE = 100;
     private TessBaseAPI ocr = new TessBaseAPI();
-
+    private ArrayAdapter<String> adapter;
+    private ArrayList<String> listItems = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        initialize();
         if (isFirstRun()) {
             initialize();
         }
         trainOCR();
+        setupGUI();
     }
     
     private boolean isFirstRun() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         return prefs.getBoolean("firstTime", true);
+    }
+
+    private void setupGUI() {
+        ListView listView = (ListView)this.findViewById(R.id.keywordList);
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1 , listItems);
+        listView.setAdapter(adapter);
+        listView.setOnItemClickListener(
+                new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        listItems.remove(position);
+                        adapter.notifyDataSetChanged();
+                    }
+                }
+        );
+        findViewById(R.id.btnAdd).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Assert.assertNotNull(v);
+                // Get string entered
+                EditText et = (EditText) findViewById(R.id.txtKeyword);
+                // Add string to underlying data structure
+                listItems.add(et.getText().toString());
+                // Notify adapter that underlying data structure changed
+                adapter.notifyDataSetChanged();
+                et.setText("");
+            }
+        });
+
     }
 
     private void initialize() {
