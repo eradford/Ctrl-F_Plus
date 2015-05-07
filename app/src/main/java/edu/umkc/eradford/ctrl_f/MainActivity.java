@@ -23,29 +23,51 @@ import com.googlecode.tesseract.android.TessBaseAPI;
 import junit.framework.Assert;
 
 import java.io.File;
-import java.io.IOException;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
 
 public class MainActivity extends ActionBarActivity {
 
-    public static final int IMAGE_CAPTURE = 100;
-    private TessBaseAPI ocr = new TessBaseAPI();
+    public static final int IMAGE_CAPTURE = 100, GET_FILE = 200;
+    private TessBaseAPI ocr;
     private ArrayAdapter<String> adapter;
     private ArrayList<String> listItems = new ArrayList<>();
+    private Uri fileUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        initialize();
+
+        //Are we properly prepared to run?
         if (isFirstRun()) {
-            initialize();
+            startActivity(new Intent(this, FirstRun.class));
         }
-        trainOCR();
+
         setupGUI();
+        unwrap(savedInstanceState);
+
+        fileUri = Uri.fromFile(new File(getApplicationContext().
+                getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+                ,"document.jpg"));
+        ocr = new TessBaseAPI();
+        trainOCR();
+
     }
-    
+
+    private void unwrap(Bundle savedInstanceState) {
+        if (savedInstanceState==null) {
+            savedInstanceState = new Bundle();
+        }
+        listItems = savedInstanceState.getStringArrayList("listItems");
+        if(listItems==null) {
+            listItems = new ArrayList<>();
+        }
+
+    }
+
     private boolean isFirstRun() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         return prefs.getBoolean("firstTime", true);
@@ -80,23 +102,7 @@ public class MainActivity extends ActionBarActivity {
 
     }
 
-    private void initialize() {
 
-        try {
-            new File(getApplicationContext().
-                    getExternalFilesDir(Environment.DIRECTORY_PICTURES), ".nomedia").createNewFile();
-        } catch (IOException e) {
-            Log.d("Initialize", e.getLocalizedMessage());
-        }
-
-
-        new AssetExtractor(getApplicationContext()).extractAssets();
-
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putBoolean("firstTime", false);
-        editor.commit();
-    }
 
 
 
@@ -117,10 +123,16 @@ public class MainActivity extends ActionBarActivity {
             case R.id.action_get_image:
                 takePicture();
                 return true;
+            case R.id.action_search_file:
+                getFile();
+                return true;
         }
+
+
 
         return super.onOptionsItemSelected(item);
     }
+
 
     @Override
     protected void onActivityResult (int requestCode, int resultCode, Intent data) {
@@ -130,20 +142,39 @@ public class MainActivity extends ActionBarActivity {
             case IMAGE_CAPTURE:
                 Log.v("ImageCaptureResult","Setting Image");
                 ocr.clear();
-                ocr.setImage(BitmapUtility.normalizeBitmapOrientation(new File(data.getDataString())));
+                ocr.setImage(BitmapUtility.normalizeBitmapOrientation(new File(fileUri.getPath())));
                 String result = ocr.getUTF8Text();
                 Log.v("ImageCaptureResult","Result:\n"+result);
+                for (String keyword:listItems) {
+                    if (result.contains(keyword)) {
+                        listItems.set(listItems.indexOf(keyword),"*****" + keyword);
+                    }
+                }
+                break;
+            case GET_FILE:
+                File resultFile = new File(data.toUri(0));
+                Log.v("GetFileResult",resultFile.toString());
+                try {
+                    StreamUtility.findKeywords(new FileInputStream(resultFile), listItems);
+                } catch (FileNotFoundException e) {
+                    Log.e("GetFileResult","File not found: ", e);
+                }
+                break;
         }
     }
 
     private void takePicture() {
-        Uri fileUri = Uri.fromFile(new File(getApplicationContext().
-                getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-                ,"document.jpg"));
+
         startActivityForResult(
                 new Intent(MediaStore.ACTION_IMAGE_CAPTURE).
                         putExtra(MediaStore.EXTRA_OUTPUT, fileUri).
                         putExtra("return-data", true), IMAGE_CAPTURE);
+    }
+
+    private void getFile() {
+        startActivityForResult(
+                new Intent(Intent.ACTION_GET_CONTENT).setType("file/*"),
+                GET_FILE);
     }
 
     private void trainOCR() {
@@ -152,5 +183,15 @@ public class MainActivity extends ActionBarActivity {
         ocr.init(trainedData, "eng");
     }
 
-    
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putStringArrayList("listItems", listItems);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        unwrap(savedInstanceState);
+    }
 }

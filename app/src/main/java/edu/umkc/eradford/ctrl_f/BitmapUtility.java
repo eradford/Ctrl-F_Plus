@@ -21,7 +21,7 @@ public class BitmapUtility {
 
 
         } catch (IOException ioe) {
-            Log.d("NormalizeBitmapOrientation", ioe.getLocalizedMessage());
+            Log.d("NormalizeBitmapOrientat", ioe.getLocalizedMessage());
         }
 
         int rotate = 0;

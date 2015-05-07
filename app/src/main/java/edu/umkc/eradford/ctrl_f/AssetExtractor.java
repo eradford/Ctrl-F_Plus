@@ -13,27 +13,23 @@ import java.io.IOException;
  */
 public class AssetExtractor {
 
-    private Context context;
+    private AssetExtractor(){}
 
-    AssetExtractor(Context context) {
-        this.context = context;
+    public static void extractAssets(Context context) {
+        extractAssets(context, context.getAssets());
     }
 
-    public void extractAssets() {
-        extractAssets(context.getAssets());
+    public static void extractAssets(Context context, AssetManager assets) {
+        extractAssets(context, assets, "");
     }
 
-    public void extractAssets(AssetManager assets) {
-        extractAssets(assets, "");
-    }
-
-    public void extractAssets(AssetManager assets, String path) {
+    public static void extractAssets(Context context, AssetManager assets, String path) {
         Log.v("AssetExtractor","Extracting assets at \""+path+"\"");
         String assetList[];
         try {
             assetList = assets.list(path);
-            if (assetList == null || assetList.length==0) {
-                extractAsset(assets, path);
+            if (assetList.length==0) {
+                extractAsset(context, assets, path);
             } else {
                 for (String asset:assetList) {
                     switch (asset) {
@@ -46,9 +42,9 @@ public class AssetExtractor {
                     (new File(context.getFilesDir(),path)).mkdir();
                     Log.v("AssetExtractor","Encountered asset: "+path+"/"+asset);
                     if (path.equals("")) {
-                        extractAssets(assets, asset);
+                        extractAssets(context, assets, asset);
                     } else {
-                        extractAssets(assets, path + "/" + asset);
+                        extractAssets(context, assets, path + "/" + asset);
                     }
                 }
             }
@@ -57,12 +53,12 @@ public class AssetExtractor {
         }
     }
 
-    private void extractAsset(AssetManager assets, String path) throws IOException {
+    private static void extractAsset(Context context, AssetManager assets, String path) throws IOException {
         Log.v("AssetExtractor","Copying asset at : "+path);
-        StreamUtility.copyStream(assets.open(path), openOutputStream(path));
+        StreamUtility.copyStream(assets.open(path), openOutputStream(context, path));
     }
 
-    private FileOutputStream openOutputStream(String path) throws IOException{
+    private static FileOutputStream openOutputStream(Context context, String path) throws IOException{
         File outputFile = new File(context.getFilesDir(),path);
         outputFile.createNewFile();
         Log.v("AssetExtractor","Opening stream: "+outputFile);
