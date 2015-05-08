@@ -19,6 +19,7 @@ public class FirstRun extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_first_run);
+
     }
 
     private void initialize() {

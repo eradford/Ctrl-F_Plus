@@ -45,10 +45,8 @@ public class MainActivity extends ActionBarActivity {
         if (isFirstRun()) {
             startActivity(new Intent(this, FirstRun.class));
         }
-
-        setupGUI();
         unwrap(savedInstanceState);
-
+        setupGUI();
         fileUri = Uri.fromFile(new File(getApplicationContext().
                 getExternalFilesDir(Environment.DIRECTORY_PICTURES)
                 ,"document.jpg"));
@@ -61,9 +59,8 @@ public class MainActivity extends ActionBarActivity {
         if (savedInstanceState==null) {
             savedInstanceState = new Bundle();
         }
-        listItems = savedInstanceState.getStringArrayList("listItems");
-        if(listItems==null) {
-            listItems = new ArrayList<>();
+        if (savedInstanceState.containsKey("listItems")) {
+            listItems = savedInstanceState.getStringArrayList("listItems");
         }
 
     }
@@ -143,10 +140,12 @@ public class MainActivity extends ActionBarActivity {
                 Log.v("ImageCaptureResult","Setting Image");
                 ocr.clear();
                 ocr.setImage(BitmapUtility.normalizeBitmapOrientation(new File(fileUri.getPath())));
+                Log.v("OCR Recognition","Searching image for text");
                 String result = ocr.getUTF8Text();
                 Log.v("ImageCaptureResult","Result:\n"+result);
+                result = result.toLowerCase();
                 for (String keyword:listItems) {
-                    if (result.contains(keyword)) {
+                    if (result.contains(keyword.toLowerCase())) {
                         listItems.set(listItems.indexOf(keyword),"*****" + keyword);
                     }
                 }
@@ -164,7 +163,6 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void takePicture() {
-
         startActivityForResult(
                 new Intent(MediaStore.ACTION_IMAGE_CAPTURE).
                         putExtra(MediaStore.EXTRA_OUTPUT, fileUri).
@@ -187,11 +185,5 @@ public class MainActivity extends ActionBarActivity {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putStringArrayList("listItems", listItems);
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        unwrap(savedInstanceState);
     }
 }
