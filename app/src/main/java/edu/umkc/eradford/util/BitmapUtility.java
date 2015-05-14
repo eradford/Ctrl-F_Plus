@@ -1,4 +1,4 @@
-package edu.umkc.eradford.ctrl_f;
+package edu.umkc.eradford.util;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -56,5 +56,9 @@ public class BitmapUtility {
 
 
         return bitmap;
+    }
+
+    public static Bitmap loadBitmapFromFile(File source) {
+        return BitmapFactory.decodeFile(source.getAbsolutePath());
     }
 }

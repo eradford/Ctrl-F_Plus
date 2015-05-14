@@ -14,11 +14,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
-
-import com.googlecode.tesseract.android.TessBaseAPI;
 
 import junit.framework.Assert;
 
@@ -26,21 +23,26 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.InvalidPropertiesFormatException;
+
+import edu.umkc.eradford.ocr.OCR;
+import edu.umkc.eradford.util.StreamUtility;
 
 
 public class MainActivity extends ActionBarActivity {
 
     public static final int IMAGE_CAPTURE = 100, GET_FILE = 200;
-    private TessBaseAPI ocr;
-    private ArrayAdapter<String> adapter;
+    private OCR ocr;
+    private ArrayItemAdapter<String> adapter;
     private ArrayList<String> listItems = new ArrayList<>();
+    private ArrayList<Integer> selectedItems = new ArrayList<>();
+    private String result;
     private Uri fileUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         //Are we properly prepared to run?
         if (isFirstRun()) {
             startActivity(new Intent(this, FirstRun.class));
@@ -49,18 +51,20 @@ public class MainActivity extends ActionBarActivity {
         setupGUI();
         fileUri = Uri.fromFile(new File(getApplicationContext().
                 getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-                ,"document.jpg"));
-        ocr = new TessBaseAPI();
-        trainOCR();
-
+                , "document.jpg"));
+        ocr = new TesseractOcr();
+        setupOCR();
     }
 
     private void unwrap(Bundle savedInstanceState) {
-        if (savedInstanceState==null) {
+        if (savedInstanceState == null) {
             savedInstanceState = new Bundle();
         }
         if (savedInstanceState.containsKey("listItems")) {
             listItems = savedInstanceState.getStringArrayList("listItems");
+        }
+        if (savedInstanceState.containsKey("selectedItems")) {
+            selectedItems = savedInstanceState.getIntegerArrayList("selectedItems");
         }
 
     }
@@ -71,14 +75,15 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void setupGUI() {
-        ListView listView = (ListView)this.findViewById(R.id.keywordList);
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1 , listItems);
+        ListView listView = (ListView) this.findViewById(R.id.keywordList);
+        adapter = new ArrayItemAdapter<>(this, android.R.layout.simple_list_item_1, listItems);
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(
                 new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                         listItems.remove(position);
+                        adapter.setSelectedItems(selectedItems);
                         adapter.notifyDataSetChanged();
                     }
                 }
@@ -96,12 +101,8 @@ public class MainActivity extends ActionBarActivity {
                 et.setText("");
             }
         });
-
+        adapter.setSelectedItems(selectedItems);
     }
-
-
-
-
 
 
     @Override
@@ -123,8 +124,11 @@ public class MainActivity extends ActionBarActivity {
             case R.id.action_search_file:
                 getFile();
                 return true;
+            case R.id.action_view_last_results:
+                Intent last_results = new Intent(this, ResultActivity.class);
+                last_results.putExtra("result", result);
+                startActivity(last_results);
         }
-
 
 
         return super.onOptionsItemSelected(item);
@@ -132,31 +136,30 @@ public class MainActivity extends ActionBarActivity {
 
 
     @Override
-    protected void onActivityResult (int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode != RESULT_OK)
             return;
         switch (requestCode) {
             case IMAGE_CAPTURE:
-                Log.v("ImageCaptureResult","Setting Image");
-                ocr.clear();
-                ocr.setImage(BitmapUtility.normalizeBitmapOrientation(new File(fileUri.getPath())));
-                Log.v("OCR Recognition","Searching image for text");
-                String result = ocr.getUTF8Text();
-                Log.v("ImageCaptureResult","Result:\n"+result);
+                Log.v("ImageCaptureResult", "Setting Image");
+                adapter.clearSelections();
+                Log.v("OCR Recognition", "Searching image for text");
+                result = ocr.parseImage(new File(fileUri.getPath()));
+                Log.v("ImageCaptureResult", "Result:\n" + result);
                 result = result.toLowerCase();
-                for (String keyword:listItems) {
+                for (String keyword : listItems) {
                     if (result.contains(keyword.toLowerCase())) {
-                        listItems.set(listItems.indexOf(keyword),"*****" + keyword);
+                        adapter.selectItem(listItems.indexOf(keyword));
                     }
                 }
                 break;
             case GET_FILE:
                 File resultFile = new File(data.toUri(0));
-                Log.v("GetFileResult",resultFile.toString());
+                Log.v("GetFileResult", resultFile.toString());
                 try {
                     StreamUtility.findKeywords(new FileInputStream(resultFile), listItems);
                 } catch (FileNotFoundException e) {
-                    Log.e("GetFileResult","File not found: ", e);
+                    Log.e("GetFileResult", "File not found: ", e);
                 }
                 break;
         }
@@ -175,15 +178,22 @@ public class MainActivity extends ActionBarActivity {
                 GET_FILE);
     }
 
-    private void trainOCR() {
-        String trainedData = getFilesDir().getAbsolutePath();
-        Log.v("trainedDataPath",trainedData);
-        ocr.init(trainedData, "eng");
-    }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putStringArrayList("listItems", listItems);
+        outState.putIntegerArrayList("selectedItems", adapter.getSelectedItems());
     }
+
+    private void setupOCR() {
+        String trainedData = getFilesDir().getAbsolutePath();
+        Log.v("trainedDataPath", trainedData);
+        try {
+            ocr.setProperty("trainedData", trainedData);
+        } catch (InvalidPropertiesFormatException e) {
+            Log.e("setupOCR","Problem setting OCR properties",e);
+        }
+    }
+
 }

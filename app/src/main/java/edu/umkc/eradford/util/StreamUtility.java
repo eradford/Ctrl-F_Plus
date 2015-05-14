@@ -1,4 +1,4 @@
-package edu.umkc.eradford.ctrl_f;
+package edu.umkc.eradford.util;
 
 import android.util.Log;
 
@@ -18,7 +18,7 @@ import java.util.Hashtable;
 public class StreamUtility {
 
 
-    static void copyStream (InputStream in, OutputStream out) throws IOException {
+    public static void copyStream (InputStream in, OutputStream out) throws IOException {
         int inInt;
         while ((inInt=in.read())!=-1) {
             out.write(inInt);

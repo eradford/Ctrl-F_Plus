@@ -5,4 +5,5 @@
         android:orderInCategory="100" app:showAsAction="never" />
     <item android:id="@+id/action_get_image" android:title="Get Image" />
     <item android:id="@+id/action_search_file" android:title="Search File" />
+    <item android:id="@+id/action_view_last_results" android:title="Last Results" />
 </menu>
