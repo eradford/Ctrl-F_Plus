@@ -6,3 +6,9 @@ Follow the instructions on the referenced site to integrate Tesseract-OCR, Lepto
 Once the NDK integration is complete, make sure the dependencies are included in your Android Studio project so the IDE will know to reference them.
 
 After this, the project should build fine and run on an emulator or connected device. I would highly recommend using a connected device as opposed to the emulator due to the nature of the project.
+
+The main activity has a layout that asks you to add keywords. Add any keywords you are searching for to this list.
+Then, explore the options menu and choose to either get an image or provide a text file.
+The app will convert your image to text if needed, and then search the text for occurrences of any of the keywords.
+Any keywords found will be highlighted on the main activity screen.
+Selecting last results in the options menu will allow you to view the text retrieved by the most recent OCR attempt.
