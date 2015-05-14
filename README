@@ -1,0 +1,8 @@
+In order to compile and run this project, start by pulling the source code from this repository.
+
+Next, you will need to take care of the project dependencies. To do this, follow the url in the CREDIT file.
+Follow the instructions on the referenced site to integrate Tesseract-OCR, Leptonica, and Tess-Two into the Android Studio project with the Android NDK.
+
+Once the NDK integration is complete, make sure the dependencies are included in your Android Studio project so the IDE will know to reference them.
+
+After this, the project should build fine and run on an emulator or connected device. I would highly recommend using a connected device as opposed to the emulator due to the nature of the project.
