@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">Ctrl-F+</string>
-    <string name="hello_world">Hello world!</string>
+    <string name="extracting_assets">Extracting assets, please wait...</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_keyword">KeywordActivity</string>
     <string name="title_activity_first_run">FirstRunActivity</string>

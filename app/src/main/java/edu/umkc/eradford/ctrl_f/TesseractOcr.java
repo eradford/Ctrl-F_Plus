@@ -52,6 +52,7 @@ public class TesseractOcr implements OCR {
                 case "trainedData":
                     expectedType = String[].class;
                     ocr.init((String) value, "eng");
+                    break;
                 //TODO Code rest of properties for Tesseract
                 default:
                     throw new InvalidPropertiesFormatException("Unrecognized property '" + key + "'.");

@@ -8,6 +8,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,6 +21,19 @@ public class FirstRun extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_first_run);
 
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                initialize();
+                updateText();
+            }
+        }).start();
     }
 
     private void initialize() {
@@ -61,5 +75,16 @@ public class FirstRun extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void updateText() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+
+                ((TextView)findViewById(R.id.extractProgress)).setText("Extraction finished!");
+
+            }
+        });
     }
 }
