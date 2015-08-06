@@ -12,6 +12,7 @@ import edu.umkc.eradford.ocr.OCR;
 import edu.umkc.eradford.util.BitmapUtility;
 
 /**
+ * OCR implementation and wrapper for Tesseract-OCR.
  * Created by Ethan on 5/13/15.
  */
 public class TesseractOcr implements OCR {
@@ -22,11 +23,12 @@ public class TesseractOcr implements OCR {
         ocr = new TessBaseAPI();
     }
 
+
     @Override
     public void initialize() {
         //Default settings are intialized here
         try {
-            setProperty("PageSegMode", TessBaseAPI.PageSegMode.PSM_AUTO_OSD);
+            setProperty("PageSegMode", TessBaseAPI.PageSegMode.PSM_AUTO);
         } catch(InvalidPropertiesFormatException e) {
             System.err.println(e.getLocalizedMessage());
             e.printStackTrace();
@@ -53,6 +55,7 @@ public class TesseractOcr implements OCR {
                     expectedType = String[].class;
                     ocr.init((String) value, "eng");
                     break;
+
                 //TODO Code rest of properties for Tesseract
                 default:
                     throw new InvalidPropertiesFormatException("Unrecognized property '" + key + "'.");
@@ -74,7 +77,9 @@ public class TesseractOcr implements OCR {
     public String parseImage(Bitmap image) {
         ocr.clear();
         ocr.setImage(image);
-        return ocr.getUTF8Text();
+        String results = ocr.getUTF8Text();
+        ocr.clear();
+        return results;
     }
 }
 
