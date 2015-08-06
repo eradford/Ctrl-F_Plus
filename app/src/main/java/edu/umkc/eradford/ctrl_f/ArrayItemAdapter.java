@@ -15,10 +15,10 @@ import java.util.List;
 public class ArrayItemAdapter<E> extends ArrayAdapter {
 
 
-    private ArrayList<Integer> selectedItems = new ArrayList<>();
+    private List<Integer> selectedItems = new ArrayList<>();
 
     /**
-     * Constructor
+     * Overrides default ArrayAdapter behavior to allow individual items to have a different background color
      *
      * @param context  The current context.
      * @param resource The resource ID for a layout file containing a TextView to use when
@@ -29,30 +29,51 @@ public class ArrayItemAdapter<E> extends ArrayAdapter {
         super(context, resource, objects);
     }
 
-
+    /**
+     * Returns a view for the item with the given position, highlighted if applicable
+     * @param position Item to retrieve view of, specified by index
+     * @param convertView
+     * @param parent
+     * @return
+     */
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        View view = super.getView(position, convertView, parent);
+        View view = super.getView(position, convertView, parent); //Get default view from superclass
         if (selectedItems.contains(position)) {
-            view.setBackgroundColor(Color.GREEN);
+            view.setBackgroundColor(Color.GREEN); //Highlight the item if it is selected
         }
         return view;
 
     }
 
+    /**
+     * Selects the specified item
+     * @param pos The index of the item to select
+     */
     public void selectItem(int pos) {
         selectedItems.add(pos);
     }
 
+    /**
+     * Clear all item selections
+     */
     public void clearSelections() {
         selectedItems.clear();
     }
 
-    public ArrayList<Integer> getSelectedItems() {
+    /**
+     * Returns a list of all selected items
+     * @return A list of of indices of all selected items
+     */
+    public List<Integer> getSelectedItems() {
         return selectedItems;
     }
 
-    public void setSelectedItems(ArrayList<Integer> selectedItems) {
+    /**
+     * Clear all selections and select all items specified by selectedItems
+     * @param selectedItems A list of item indices to select
+     */
+    public void setSelectedItems(List<Integer> selectedItems) {
         this.selectedItems = selectedItems;
     }
 }
